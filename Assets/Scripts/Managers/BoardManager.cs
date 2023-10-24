@@ -11,9 +11,10 @@ public class BoardManager : MonoBehaviour
     private int _boardHeight;   // Tahta yüksekliði
     private int[] _gameBoard;  // Tahta içeriði
 
-    [SerializeField] private GameObject _tilePrefab;
-    [SerializeField] private GameObject _emptyTilePrefab;
-    [SerializeField] private Sprite[] _tileSprites;
+    private BoardDataSO _boardData;
+    //[SerializeField] private GameObject _tilePrefab;
+    //[SerializeField] private GameObject _emptyTilePrefab;
+    //[SerializeField] private Sprite[] _tileSprites;
 
     [SerializeField] private Tile _selectedTile;
     [SerializeField] private Tile _swapTile;
@@ -75,26 +76,22 @@ public class BoardManager : MonoBehaviour
             }
         }
     }
-
-    private void CheckMatches()
-    {
-        // Eþleþmele varmý kontrol et
-    }    
-    public void Init(GameManager gm, int width, int height)
+    public void Init(GameManager gm, BoardDataSO boardData)
     {
         _gameManager = gm;
-        InitBoard(width, height);
-        FillBoardRandomly();
+        _boardData = boardData;
+        InitBoard();
         RenderBoard();
     }
-    private void InitBoard(int width, int height)
+    private void InitBoard()
     {
         // Tahtayý oluþtur
         _moveCount = 0;
-        _boardWidth = width;
-        _boardHeight = height;
+        _boardWidth = _boardData.BoardWidth;
+        _boardHeight = _boardData.BoardHeight;
 
         _gameBoard = new int[_boardWidth * _boardHeight];
+        FillBoardRandomly();
     }
     private void RenderBoard()
     {
@@ -103,7 +100,7 @@ public class BoardManager : MonoBehaviour
         {
             for (int i = 0; i < _boardWidth; i++)
             {
-                GameObject emptyTile = Instantiate(_emptyTilePrefab);
+                GameObject emptyTile = Instantiate(_boardData.EmptyTilePrefab);
                 emptyTile.transform.SetParent(transform);
                 emptyTile.transform.localPosition = new Vector3(i, -j, 0f); // yukarýdan aþaðý gideceði için -j
 
@@ -121,13 +118,13 @@ public class BoardManager : MonoBehaviour
     private void CretaTile(int tileId, int x, int y)
     {
         // Yeni Tile objesi oluþtur
-        GameObject tileObject = Instantiate(_tilePrefab);
+        GameObject tileObject = Instantiate(_boardData.TilePrefab);
         tileObject.transform.SetParent(transform);
         tileObject.transform.localPosition = new Vector3(x, -y, 0f); // yukarýdan aþaðý gideceði için -j
 
         Tile tile = tileObject.GetComponent<Tile>();
         tile.TileType = tileId;
-        tile.SetSprite(_tileSprites[tileId]);   // _tileSprites gelen sprite oluþturulan Tileobjesinin sprite olarak atanýr
+        tile.SetSprite(_boardData.TileSprites[tileId]);   // _tileSprites gelen sprite oluþturulan Tileobjesinin sprite olarak atanýr
     }
     private void FillBoardRandomly()
     {
@@ -136,7 +133,7 @@ public class BoardManager : MonoBehaviour
         {
             for (int i = 0; i < _boardWidth; i++)
             {
-                _gameBoard[GetBoardPosition(i, j)] = UnityEngine.Random.Range(0, _tileSprites.Length);
+                _gameBoard[GetBoardPosition(i, j)] = UnityEngine.Random.Range(0, _boardData.TileSprites.Length);
             }
         }
     }
@@ -147,5 +144,9 @@ public class BoardManager : MonoBehaviour
 
         if (tileHit != null && tileHit.CompareTag("Tile")) return tileHit.GetComponent<Tile>();
         return null;
+    }
+    private void CheckMatches()
+    {
+        // Eþleþmele varmý kontrol et
     }
 }
