@@ -23,3 +23,4 @@ MonoBehaviour:
   - {fileID: 474816192, guid: f735cedbc2aeb1f43b255998a5535555, type: 3}
   _tilePrefab: {fileID: 4185641695343440979, guid: 6979b73bc597a164699f70d18fc09967, type: 3}
   _emptyTilePrefab: {fileID: 5578620100147320523, guid: bb4cefc1a9bfc6e4c8adc1166b048beb, type: 3}
+  _explosionPrefab: {fileID: 5724498046842075467, guid: 8c11dbc3f5a2b234194bfdce24a8cf93, type: 3}
