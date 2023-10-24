@@ -320,6 +320,7 @@ MonoBehaviour:
   _selectedTile: {fileID: 0}
   _swapTile: {fileID: 0}
   _moveCount: 0
+  _popCount: 0
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -373,7 +374,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 8
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2

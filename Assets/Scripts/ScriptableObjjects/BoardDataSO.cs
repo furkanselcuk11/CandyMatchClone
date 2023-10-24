@@ -13,6 +13,7 @@ public class BoardDataSO : ScriptableObject
     [Space]
     [SerializeField] private GameObject _tilePrefab;
     [SerializeField] private GameObject _emptyTilePrefab;
+    [SerializeField] private GameObject _explosionPrefab;
 
     public int BoardWidth { get => _boardWidth; set => _boardWidth = value; }
     public int BoardHeight { get => _boardHeight; set => _boardHeight = value; }
@@ -20,4 +21,5 @@ public class BoardDataSO : ScriptableObject
     public Sprite[] TileSprites { get => _TileSprites; set => _TileSprites = value; }
     public GameObject TilePrefab { get => _tilePrefab; set => _tilePrefab = value; }
     public GameObject EmptyTilePrefab { get => _emptyTilePrefab; set => _emptyTilePrefab = value; }
+    public GameObject ExplosionPrefab { get => _explosionPrefab; set => _explosionPrefab = value; }
 }

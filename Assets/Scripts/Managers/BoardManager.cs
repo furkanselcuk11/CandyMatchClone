@@ -16,10 +16,11 @@ public class BoardManager : MonoBehaviour
     //[SerializeField] private GameObject _emptyTilePrefab;
     //[SerializeField] private Sprite[] _tileSprites;
 
-    [SerializeField] private Tile _selectedTile;
-    [SerializeField] private Tile _swapTile;
+    private Tile _selectedTile;
+    private Tile _swapTile;
 
     [SerializeField] private int _moveCount = 0;
+    [SerializeField] private int _popCount = 0;
 
     private GameManager _gameManager;
 
@@ -108,7 +109,10 @@ public class BoardManager : MonoBehaviour
             OnBoardMove?.Invoke(_moveCount); // Her hareket sonrasý event gönder
 
             CheckMatches();
+            StartCoroutine(HandleEmptySpaces());
         }
+        _selectedTile = null;
+        _swapTile = null;
     }
     public void Init(GameManager gm, BoardDataSO boardData)
     {
@@ -121,6 +125,7 @@ public class BoardManager : MonoBehaviour
     {
         // Tahtayý oluþtur
         _moveCount = 0;
+        _popCount = 0;
         _boardWidth = _boardData.BoardWidth;
         _boardHeight = _boardData.BoardHeight;
 
@@ -182,5 +187,209 @@ public class BoardManager : MonoBehaviour
     private void CheckMatches()
     {
         // Eþleþmele varmý kontrol et
+        _popCount += CheckForCombosTiles(_selectedTile);
+        _popCount += CheckForCombosTiles(_swapTile);
+    }
+    private int CheckForCombosTiles(Tile comboTile)
+    {
+        int popCount = 0;   // Patlayan Tile sayýsý
+        int comboX = comboTile.GetX();
+        int comboY = comboTile.GetY();
+
+        List<Tile> comboH = CheckForCombosHorizontal(comboX, comboY, comboTile.TileType);
+        List<Tile> comboV = CheckForCombosVertical(comboX, comboY, comboTile.TileType);
+
+        bool isComboTilePops = false;
+        if (comboH.Count > 1)
+        {
+            foreach (Tile tile in comboH)
+            {
+                popCount += 1;
+                PopTile(tile);
+            }
+            isComboTilePops = true;
+        }
+        if (comboV.Count > 1)
+        {
+            foreach (Tile tile in comboV)
+            {
+                popCount += 1;
+                PopTile(tile);
+            }
+            isComboTilePops = true;
+        }
+        if (isComboTilePops)
+        {
+            popCount += 1;
+            PopTile(comboTile);
+        }
+        return popCount;
+    }
+    private void PopTile(Tile tile)
+    {
+        // Tile yok et ve patlam animasyonu oynar
+        _gameBoard[GetBoardPosition(tile.GetX(), tile.GetY())] = -1;    // Board üzerinde yerlerini boþalt
+
+        GameObject explosion = Instantiate(_boardData.ExplosionPrefab);
+        explosion.transform.position = tile.transform.position;
+
+        Destroy(explosion, 0.5f);
+        Destroy(tile.gameObject);
+    }
+
+    private List<Tile> CheckForCombosVertical(int x, int y, int tileType)
+    {
+        // Dikeyde birbiri ile eþleþen tile varmý kontrol et ve birbirli ile yanyan gelen Tileleri listeye ekle
+        List<Tile> comboList = new List<Tile>();
+        // En son býraktýðýn Tile merkezi alarak saðdan ve soldan kontrol et
+        int preY = y - 1;
+        int postY = y + 1;
+
+        while (preY > -1 || postY < _boardHeight)
+        {
+            if (preY > -1)
+            {
+                int prePos = GetBoardPosition(x, preY); // Solundaki Tile'ýn koordinatýný al
+                if (_gameBoard[prePos] == tileType)
+                {
+                    // Solundaki Tile ile tipleri ayný ise Tile'ý al 
+                    Tile tile = GetTile(x, preY);
+                    if (tile != null)
+                    {
+                        // listeye ekle ve bir soldakine git
+                        comboList.Add(tile);
+                        preY -= 1;
+                    }
+                }
+                else
+                {
+                    // Solundaki Tile ile tipleri ayný deðilse çýk
+                    preY = -1;
+                }
+            }
+            if (postY < _boardHeight)
+            {
+                int postPos = GetBoardPosition(x, postY); // Saðýndaki Tile'ýn koordinatýný al
+                if (_gameBoard[postPos] == tileType)
+                {
+                    // Saðýndaki Tile ile tipleri ayný ise Tile'ý al 
+                    Tile tile = GetTile(x, postY);
+                    if (tile != null)
+                    {
+                        // listeye ekle ve bir Saðýndaki git
+                        comboList.Add(tile);
+                        postY += 1;
+                    }
+                }
+                else
+                {
+                    // Saðýndaki Tile ile tipleri ayný deðilse çýk
+                    postY = _boardHeight;
+                }
+            }
+        }
+        return comboList;
+    }
+    private List<Tile> CheckForCombosHorizontal(int x, int y, int tileType)
+    {
+        // Yatayda birbiri ile eþleþen tile varmý kontrol et ve birbirli ile yanyan gelen Tileleri listeye ekle
+        List<Tile> comboList = new List<Tile>();
+        // En son býraktýðýn Tile merkezi alarak saðdan ve soldan kontrol et
+        int preX = x - 1;
+        int postX = x + 1;
+
+        while (preX > -1 || postX < _boardWidth)
+        {
+            if (preX > -1)
+            {
+                int prePos = GetBoardPosition(preX, y); // Solundaki Tile'ýn koordinatýný al
+                if (_gameBoard[prePos] == tileType)
+                {
+                    // Solundaki Tile ile tipleri ayný ise Tile'ý al 
+                    Tile tile = GetTile(preX, y);
+                    if (tile != null)
+                    {
+                        // listeye ekle ve bir soldakine git
+                        comboList.Add(tile);
+                        preX -= 1;
+                    }
+                }
+                else
+                {
+                    // Solundaki Tile ile tipleri ayný deðilse çýk
+                    preX = -1;
+                }
+            }
+            if (postX < _boardWidth)
+            {
+                int postPos = GetBoardPosition(postX, y); // Saðýndaki Tile'ýn koordinatýný al
+                if (_gameBoard[postPos] == tileType)
+                {
+                    // Saðýndaki Tile ile tipleri ayný ise Tile'ý al 
+                    Tile tile = GetTile(postX, y);
+                    if (tile != null)
+                    {
+                        // listeye ekle ve bir Saðýndaki git
+                        comboList.Add(tile);
+                        postX += 1;
+                    }
+                }
+                else
+                {
+                    // Saðýndaki Tile ile tipleri ayný deðilse çýk
+                    postX = _boardWidth;
+                }
+            }
+        }
+        return comboList;
+    }
+    IEnumerator HandleEmptySpaces()
+    {
+        // Board üzerindeki boþ alanlarý kontrol etme, aþaðý kaydýrma ve boþ alanlara tile ekleme
+        yield return new WaitForSeconds(0.5f);
+        CheckForEmptySpaces();
+        yield return new WaitForSeconds(0.5f);
+        FillEmptySpaces();
+
+    }
+    private void CheckForEmptySpaces()
+    {
+        // Board üzerindeki boþ alanlarý kontrol et ve aþaðý kaydýr
+        // Kontol etmek için en aþaðýdan baþlar ve altý boþ ise Tile aþaðý kayar
+        for (int i = 0; i < _boardWidth; i++)
+        {
+            for (int j = (_boardHeight - 2); j > -1; j--)
+            {
+                if (_gameBoard[GetBoardPosition(i, j)] < 0) continue;
+                // Tile altý boþ ise bir aþaðý kaydýr
+                Tile tile = GetTile(i, j);
+                int y = j + 1;
+
+                while (y < _boardHeight && _gameBoard[GetBoardPosition(i, y)] < 0)
+                {
+                    tile.transform.localPosition = new Vector3(i, -y, 0f);
+                    _gameBoard[GetBoardPosition(i, y - 1)] = -1;    // Geçiþler Coroutine ile yavaþlatýlabilir
+                    _gameBoard[GetBoardPosition(i, y)] = tile.TileType;
+                    y += 1;
+                }
+            }
+        }
+    }
+    private void FillEmptySpaces()
+    {
+        // Board üzerindeki boþ alanlarý kontrol et ve yeni Tile ekle
+        for (int i = 0; i < _boardWidth; i++)
+        {
+            for (int j = 0; j < _boardHeight; j++)
+            {
+                int pos = GetBoardPosition(i, j);
+                if (_gameBoard[pos] < 0)
+                {
+                    // Board üzerineki Tile boþ ise
+                    _gameBoard[pos] = UnityEngine.Random.Range(0, _boardData.TileSprites.Length);
+                    CretaTile(_gameBoard[pos], i, j);   // Dotween ile Y ekseinde yukarýdan aþaðý düþeblir
+                }
+            }
+        }
     }
 }
