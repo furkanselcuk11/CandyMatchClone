@@ -168,6 +168,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _boardManager: {fileID: 431960119}
+  _boards:
+  - {fileID: 11400000, guid: 99379d7ad26eea34e8e25a5525853742, type: 2}
+  - {fileID: 11400000, guid: a3aaa0179bf832a45bcde8197c1ba03d, type: 2}
+  _levelIndex: 0
 --- !u!1 &340526808
 GameObject:
   m_ObjectHideFlags: 0
@@ -313,14 +317,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa4ab4799ab90a8499c51376d8b853fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _tilePrefab: {fileID: 4185641695343440979, guid: 6979b73bc597a164699f70d18fc09967, type: 3}
-  _emptyTilePrefab: {fileID: 5578620100147320523, guid: bb4cefc1a9bfc6e4c8adc1166b048beb, type: 3}
-  _tileSprites:
-  - {fileID: -1793965849, guid: f735cedbc2aeb1f43b255998a5535555, type: 3}
-  - {fileID: -2024796625, guid: f735cedbc2aeb1f43b255998a5535555, type: 3}
-  - {fileID: -1560133598, guid: f735cedbc2aeb1f43b255998a5535555, type: 3}
-  - {fileID: 1063539091, guid: f735cedbc2aeb1f43b255998a5535555, type: 3}
-  - {fileID: 474816192, guid: f735cedbc2aeb1f43b255998a5535555, type: 3}
+  _selectedTile: {fileID: 0}
+  _swapTile: {fileID: 0}
+  _moveCount: 0
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
