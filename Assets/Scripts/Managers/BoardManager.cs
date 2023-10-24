@@ -30,6 +30,36 @@ public class BoardManager : MonoBehaviour
     }
     void Update()
     {
+        //#if UNITY_IOS || UNITY_ANDROID
+        //        HandleMobileInput();
+        //#else
+        //                HandlePCInput();
+        //#endif
+        HandlePCInput();
+    }
+    private void HandleMobileInput()
+    {
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
+            {
+                RaycastHit2D hitInfo = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(touch.rawPosition), Vector2.zero);
+
+                if (hitInfo.collider != null && hitInfo.collider.CompareTag("Tile"))
+                {
+                    _selectedTile = hitInfo.collider.GetComponent<Tile>();  // Dokunduðum Tile objesini seç
+                }
+            }
+            if (touch.phase == TouchPhase.Ended)
+            {
+                Vector2 touchPos = Camera.main.ScreenToWorldPoint(touch.position);
+                SwapSelectedTiles(touchPos);
+            }
+        }
+    }
+    private void HandlePCInput()
+    {
         if (Input.GetMouseButtonDown(0))
         {
             RaycastHit2D hitInfo = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
@@ -42,38 +72,42 @@ public class BoardManager : MonoBehaviour
         if (Input.GetMouseButtonUp(0))
         {
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            SwapSelectedTiles(mousePos);
+        }
+    }
+    private void SwapSelectedTiles(Vector2 swipePos)
+    {
+        // Tile kaydrýma iþlemi
+        // Parmaðýmýzý býraktýðýmda bulunduðum konum ve oradaki Tile objesi
+        int swipeX = (int)Mathf.Clamp(Mathf.Round(swipePos.x - _selectedTile.transform.position.x), -1f, 1f);
+        int swipeY = (int)Mathf.Clamp(Mathf.Round(_selectedTile.transform.position.y - swipePos.y), -1f, 1f);
 
-            // Parmaðýmýzý býraktýðýmda bulunduðum konum ve oradaki Tile objesi
-            int swipeX = (int)Mathf.Clamp(Mathf.Round(mousePos.x - _selectedTile.transform.position.x), -1f, 1f);
-            int swipeY = (int)Mathf.Clamp(Mathf.Round(_selectedTile.transform.position.y - mousePos.y), -1f, 1f);
+        int selectedX = _selectedTile.GetX();
+        int selectedY = _selectedTile.GetY();
 
-            int selectedX = _selectedTile.GetX();
-            int selectedY = _selectedTile.GetY();
+        int swapX = selectedX + swipeX;
+        int swapY = selectedY + swipeY;
 
-            int swapX = selectedX + swipeX;
-            int swapY = selectedY + swipeY;
+        _swapTile = GetTile(swapX, swapY);
 
-            _swapTile = GetTile(swapX, swapY);
+        if (_swapTile != null)
+        {
+            int selectedPosition = GetBoardPosition(selectedX, selectedY);
+            int swapPosition = GetBoardPosition(swapX, swapY);
 
-            if (_swapTile != null)
-            {
-                int selectedPosition = GetBoardPosition(selectedX, selectedY);
-                int swapPosition = GetBoardPosition(swapX, swapY);
+            // selectedPosition ve swapPosition tahta üzerindeki posizyonlarý yer deðiþtirir
+            _gameBoard[selectedPosition] = _swapTile.TileType;
+            _gameBoard[swapPosition] = _selectedTile.TileType;
 
-                // selectedPosition ve swapPosition tahta üzerindeki posizyonlarý yer deðiþtirir
-                _gameBoard[selectedPosition] = _swapTile.TileType;
-                _gameBoard[swapPosition] = _selectedTile.TileType;
+            // selectedPosition ve swapPosition sahenede yer deðiþtirir
+            Vector3 temPos = _swapTile.transform.position;
+            _swapTile.transform.position = _selectedTile.transform.position;
+            _selectedTile.transform.position = temPos;
 
-                // selectedPosition ve swapPosition sahenede yer deðiþtirir
-                Vector3 temPos = _swapTile.transform.position;
-                _swapTile.transform.position = _selectedTile.transform.position;
-                _selectedTile.transform.position = temPos;
+            _moveCount += 1; // her hareket sonrasý arttýr
+            OnBoardMove?.Invoke(_moveCount); // Her hareket sonrasý event gönder
 
-                _moveCount += 1; // her hareket sonrasý arttýr
-                OnBoardMove?.Invoke(_moveCount); // Her hareket sonrasý event gönder
-
-                CheckMatches();
-            }
+            CheckMatches();
         }
     }
     public void Init(GameManager gm, BoardDataSO boardData)
