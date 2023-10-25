@@ -120,6 +120,7 @@ public class BoardManager : MonoBehaviour
         _boardData = boardData;
         InitBoard();
         RenderBoard();
+        StartCoroutine(CheckMatchesControl());        
     }
     private void InitBoard()
     {
@@ -343,14 +344,31 @@ public class BoardManager : MonoBehaviour
         }
         return comboList;
     }
+    IEnumerator CheckMatchesControl()
+    {
+        yield return new WaitForSeconds(1f);
+        for (int i = 0; i < _boardWidth; i++)
+        {
+            for (int j = 0; j < _boardHeight; j++)
+            {
+                int tileType = _gameBoard[GetBoardPosition(i, j)]; // Tahtada hangi tile tipi olduðunu al
+
+                if (tileType >= 0)
+                {
+                    Tile tile = GetTile(i, j); // _gameBoard'daki pozisyona karþýlýk gelen Tile nesnesini al
+                    _popCount += CheckForCombosTiles(tile);
+                }
+            }
+        }
+        StartCoroutine(HandleEmptySpaces());
+    }
     IEnumerator HandleEmptySpaces()
     {
         // Board üzerindeki boþ alanlarý kontrol etme, aþaðý kaydýrma ve boþ alanlara tile ekleme
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(1f);
         CheckForEmptySpaces();
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(1f);
         FillEmptySpaces();
-
     }
     private void CheckForEmptySpaces()
     {
