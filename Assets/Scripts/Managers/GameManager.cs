@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -25,6 +26,7 @@ public class GameManager : MonoBehaviour
     {
         _boardManager.Init(this, _boards[_levelIndex % _boards.Length]);  // Tahta oluþtur
     }
+
     void Update()
     {
 

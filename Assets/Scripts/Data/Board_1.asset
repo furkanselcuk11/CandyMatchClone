@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _boardWidth: 7
   _boardHeight: 7
-  _gameBoards: 
+  _isFillBoardRandom: 1
+  _gameBoard: 
   _TileSprites:
   - {fileID: 975234053, guid: f735cedbc2aeb1f43b255998a5535555, type: 3}
   - {fileID: -1987705808, guid: f735cedbc2aeb1f43b255998a5535555, type: 3}

@@ -171,6 +171,7 @@ MonoBehaviour:
   _boards:
   - {fileID: 11400000, guid: 99379d7ad26eea34e8e25a5525853742, type: 2}
   - {fileID: 11400000, guid: a3aaa0179bf832a45bcde8197c1ba03d, type: 2}
+  - {fileID: 11400000, guid: d194071c6ff4f484a8eabe39f1a4a11a, type: 2}
   _levelIndex: 0
 --- !u!1 &340526808
 GameObject:
@@ -317,8 +318,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa4ab4799ab90a8499c51376d8b853fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _selectedTile: {fileID: 0}
-  _swapTile: {fileID: 0}
+  _boardWidth: 0
+  _boardHeight: 0
+  _gameBoard: 
+  _boardData: {fileID: 0}
   _moveCount: 0
   _popCount: 0
 --- !u!1 &519420028
