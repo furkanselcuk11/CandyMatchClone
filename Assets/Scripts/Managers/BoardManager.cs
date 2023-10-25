@@ -3,15 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.ConstrainedExecution;
 using UnityEngine;
+using static GameManager;
 
 public class BoardManager : MonoBehaviour
 {
     [Header("Game Board Settings")]
-    private int _boardWidth;    // Tahta geniþliði
-    private int _boardHeight;   // Tahta yüksekliði
-    private int[] _gameBoard;  // Tahta içeriði
+    [SerializeField] private int _boardWidth;    // Tahta geniþliði
+    [SerializeField] private int _boardHeight;   // Tahta yüksekliði
+    [SerializeField] private int[] _gameBoard;  // Tahta içeriði
 
-    private BoardDataSO _boardData;
+    [SerializeField] private BoardDataSO _boardData;
     //[SerializeField] private GameObject _tilePrefab;
     //[SerializeField] private GameObject _emptyTilePrefab;
     //[SerializeField] private Sprite[] _tileSprites;
@@ -23,6 +24,10 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private int _popCount = 0;
 
     private GameManager _gameManager;
+
+    public int BoardWidth { get => _boardWidth; set => _boardWidth = value; }
+    public int BoardHeight { get => _boardHeight; set => _boardHeight = value; }
+    public int[] GameBoard { get => _gameBoard; set => _gameBoard = value; }
 
     public event Action<int> OnBoardMove;   // Her hareket sonrasý çalýþ
     void Start()
@@ -97,8 +102,8 @@ public class BoardManager : MonoBehaviour
             int swapPosition = GetBoardPosition(swapX, swapY);
 
             // selectedPosition ve swapPosition tahta üzerindeki posizyonlarý yer deðiþtirir
-            _gameBoard[selectedPosition] = _swapTile.TileType;
-            _gameBoard[swapPosition] = _selectedTile.TileType;
+            GameBoard[selectedPosition] = _swapTile.TileType;
+            GameBoard[swapPosition] = _selectedTile.TileType;
 
             // selectedPosition ve swapPosition sahenede yer deðiþtirir
             Vector3 temPos = _swapTile.transform.position;
@@ -120,31 +125,38 @@ public class BoardManager : MonoBehaviour
         _boardData = boardData;
         InitBoard();
         RenderBoard();
-        StartCoroutine(CheckMatchesControl());        
+        StartCoroutine(CheckMatchesControl());
     }
     private void InitBoard()
     {
         // Tahtayý oluþtur
         _moveCount = 0;
         _popCount = 0;
-        _boardWidth = _boardData.BoardWidth;
-        _boardHeight = _boardData.BoardHeight;
+        BoardWidth = _boardData.BoardWidth;
+        BoardHeight = _boardData.BoardHeight;
 
-        _gameBoard = new int[_boardWidth * _boardHeight];
-        FillBoardRandomly();
+        GameBoard = new int[BoardWidth * BoardHeight];
+        if (_boardData.IsFillBoardRandom)
+        {
+            FillBoardRandomly();
+        }
+        else
+        {
+            FillBoardManuel();
+        }
     }
     private void RenderBoard()
     {
         // Tahtayý doldur
-        for (int j = 0; j < _boardHeight; j++)
+        for (int j = 0; j < BoardHeight; j++)
         {
-            for (int i = 0; i < _boardWidth; i++)
+            for (int i = 0; i < BoardWidth; i++)
             {
                 GameObject emptyTile = Instantiate(_boardData.EmptyTilePrefab);
                 emptyTile.transform.SetParent(transform);
                 emptyTile.transform.localPosition = new Vector3(i, -j, 0f); // yukarýdan aþaðý gideceði için -j
 
-                int tileId = _gameBoard[GetBoardPosition(i, j)];    // tileId ver
+                int tileId = GameBoard[GetBoardPosition(i, j)];    // tileId ver
 
                 CretaTile(tileId, i, j);
             }
@@ -153,7 +165,7 @@ public class BoardManager : MonoBehaviour
     private int GetBoardPosition(int x, int y)
     {
         // Boþ Tile objesinin tahta üzerinde pozisyonunu belirle
-        return (_boardWidth * y) + x;
+        return (BoardWidth * y) + x;
     }
     private void CretaTile(int tileId, int x, int y)
     {
@@ -169,12 +181,20 @@ public class BoardManager : MonoBehaviour
     private void FillBoardRandomly()
     {
         // Tahtada bulanan Tile objelerine random sprite oluþtur
-        for (int j = 0; j < _boardHeight; j++)
+        for (int j = 0; j < BoardHeight; j++)
         {
-            for (int i = 0; i < _boardWidth; i++)
+            for (int i = 0; i < BoardWidth; i++)
             {
-                _gameBoard[GetBoardPosition(i, j)] = UnityEngine.Random.Range(0, _boardData.TileSprites.Length);
+                GameBoard[GetBoardPosition(i, j)] = UnityEngine.Random.Range(0, _boardData.TileSprites.Length);
             }
+        }
+    }
+    private void FillBoardManuel()
+    {
+        // Tahtada bulanan Tile objelerine  _boardData levele göre sprite oluþtur
+        for (int i = 0; i < _boardData.GameBoard.Length; i++)
+        {
+            GameBoard[i] = _boardData.GameBoard[i];
         }
     }
     private Tile GetTile(int x, int y)
@@ -229,7 +249,7 @@ public class BoardManager : MonoBehaviour
     private void PopTile(Tile tile)
     {
         // Tile yok et ve patlam animasyonu oynar
-        _gameBoard[GetBoardPosition(tile.GetX(), tile.GetY())] = -1;    // Board üzerinde yerlerini boþalt
+        GameBoard[GetBoardPosition(tile.GetX(), tile.GetY())] = -1;    // Board üzerinde yerlerini boþalt
 
         GameObject explosion = Instantiate(_boardData.ExplosionPrefab);
         explosion.transform.position = tile.transform.position;
@@ -246,12 +266,12 @@ public class BoardManager : MonoBehaviour
         int preY = y - 1;
         int postY = y + 1;
 
-        while (preY > -1 || postY < _boardHeight)
+        while (preY > -1 || postY < BoardHeight)
         {
             if (preY > -1)
             {
                 int prePos = GetBoardPosition(x, preY); // Solundaki Tile'ýn koordinatýný al
-                if (_gameBoard[prePos] == tileType)
+                if (GameBoard[prePos] == tileType)
                 {
                     // Solundaki Tile ile tipleri ayný ise Tile'ý al 
                     Tile tile = GetTile(x, preY);
@@ -268,10 +288,10 @@ public class BoardManager : MonoBehaviour
                     preY = -1;
                 }
             }
-            if (postY < _boardHeight)
+            if (postY < BoardHeight)
             {
                 int postPos = GetBoardPosition(x, postY); // Saðýndaki Tile'ýn koordinatýný al
-                if (_gameBoard[postPos] == tileType)
+                if (GameBoard[postPos] == tileType)
                 {
                     // Saðýndaki Tile ile tipleri ayný ise Tile'ý al 
                     Tile tile = GetTile(x, postY);
@@ -285,7 +305,7 @@ public class BoardManager : MonoBehaviour
                 else
                 {
                     // Saðýndaki Tile ile tipleri ayný deðilse çýk
-                    postY = _boardHeight;
+                    postY = BoardHeight;
                 }
             }
         }
@@ -299,12 +319,12 @@ public class BoardManager : MonoBehaviour
         int preX = x - 1;
         int postX = x + 1;
 
-        while (preX > -1 || postX < _boardWidth)
+        while (preX > -1 || postX < BoardWidth)
         {
             if (preX > -1)
             {
                 int prePos = GetBoardPosition(preX, y); // Solundaki Tile'ýn koordinatýný al
-                if (_gameBoard[prePos] == tileType)
+                if (GameBoard[prePos] == tileType)
                 {
                     // Solundaki Tile ile tipleri ayný ise Tile'ý al 
                     Tile tile = GetTile(preX, y);
@@ -321,10 +341,10 @@ public class BoardManager : MonoBehaviour
                     preX = -1;
                 }
             }
-            if (postX < _boardWidth)
+            if (postX < BoardWidth)
             {
                 int postPos = GetBoardPosition(postX, y); // Saðýndaki Tile'ýn koordinatýný al
-                if (_gameBoard[postPos] == tileType)
+                if (GameBoard[postPos] == tileType)
                 {
                     // Saðýndaki Tile ile tipleri ayný ise Tile'ý al 
                     Tile tile = GetTile(postX, y);
@@ -338,7 +358,7 @@ public class BoardManager : MonoBehaviour
                 else
                 {
                     // Saðýndaki Tile ile tipleri ayný deðilse çýk
-                    postX = _boardWidth;
+                    postX = BoardWidth;
                 }
             }
         }
@@ -347,11 +367,11 @@ public class BoardManager : MonoBehaviour
     IEnumerator CheckMatchesControl()
     {
         yield return new WaitForSeconds(1f);
-        for (int i = 0; i < _boardWidth; i++)
+        for (int i = 0; i < BoardWidth; i++)
         {
-            for (int j = 0; j < _boardHeight; j++)
+            for (int j = 0; j < BoardHeight; j++)
             {
-                int tileType = _gameBoard[GetBoardPosition(i, j)]; // Tahtada hangi tile tipi olduðunu al
+                int tileType = GameBoard[GetBoardPosition(i, j)]; // Tahtada hangi tile tipi olduðunu al
 
                 if (tileType >= 0)
                 {
@@ -374,20 +394,20 @@ public class BoardManager : MonoBehaviour
     {
         // Board üzerindeki boþ alanlarý kontrol et ve aþaðý kaydýr
         // Kontol etmek için en aþaðýdan baþlar ve altý boþ ise Tile aþaðý kayar
-        for (int i = 0; i < _boardWidth; i++)
+        for (int i = 0; i < BoardWidth; i++)
         {
-            for (int j = (_boardHeight - 2); j > -1; j--)
+            for (int j = (BoardHeight - 2); j > -1; j--)
             {
-                if (_gameBoard[GetBoardPosition(i, j)] < 0) continue;
+                if (GameBoard[GetBoardPosition(i, j)] < 0) continue;
                 // Tile altý boþ ise bir aþaðý kaydýr
                 Tile tile = GetTile(i, j);
                 int y = j + 1;
 
-                while (y < _boardHeight && _gameBoard[GetBoardPosition(i, y)] < 0)
+                while (y < BoardHeight && GameBoard[GetBoardPosition(i, y)] < 0)
                 {
                     tile.transform.localPosition = new Vector3(i, -y, 0f);
-                    _gameBoard[GetBoardPosition(i, y - 1)] = -1;    // Geçiþler Coroutine ile yavaþlatýlabilir
-                    _gameBoard[GetBoardPosition(i, y)] = tile.TileType;
+                    GameBoard[GetBoardPosition(i, y - 1)] = -1;    // Geçiþler Coroutine ile yavaþlatýlabilir
+                    GameBoard[GetBoardPosition(i, y)] = tile.TileType;
                     y += 1;
                 }
             }
@@ -396,16 +416,16 @@ public class BoardManager : MonoBehaviour
     private void FillEmptySpaces()
     {
         // Board üzerindeki boþ alanlarý kontrol et ve yeni Tile ekle
-        for (int i = 0; i < _boardWidth; i++)
+        for (int i = 0; i < BoardWidth; i++)
         {
-            for (int j = 0; j < _boardHeight; j++)
+            for (int j = 0; j < BoardHeight; j++)
             {
                 int pos = GetBoardPosition(i, j);
-                if (_gameBoard[pos] < 0)
+                if (GameBoard[pos] < 0)
                 {
                     // Board üzerineki Tile boþ ise
-                    _gameBoard[pos] = UnityEngine.Random.Range(0, _boardData.TileSprites.Length);
-                    CretaTile(_gameBoard[pos], i, j);   // Dotween ile Y ekseinde yukarýdan aþaðý düþeblir
+                    GameBoard[pos] = UnityEngine.Random.Range(0, _boardData.TileSprites.Length);
+                    CretaTile(GameBoard[pos], i, j);   // Dotween ile Y ekseinde yukarýdan aþaðý düþeblir
                 }
             }
         }
